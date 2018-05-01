@@ -8,9 +8,10 @@ mainClassName = "studio.rndr.DemoKt"
 
 buildscript {
     ext.kotlin_version = "1.2.30"
-    ext.openrndr_version = "0.3.3"
+    ext.openrndr_version = "0.4.0-SNAPSHOT"
 
     repositories {
+
         jcenter()
         mavenCentral()
     }
@@ -22,6 +23,7 @@ buildscript {
 sourceCompatibility = 1.8
 
 repositories {
+    mavenLocal()
     mavenCentral()
     maven {
         url "https://dl.bintray.com/openrndr/openrndr"
@@ -40,6 +42,7 @@ dependencies {
     compile "org.openrndr:openrndr-svg:$openrndr_version"
     compile "org.openrndr:openrndr-filter:$openrndr_version"
     compile "org.openrndr:openrndr-animatable:$openrndr_version"
+    compile "org.openrndr:openrndr-extensions:$openrndr_version"
 
     //compile "org.openrndr:openrndr-ffmpeg:$openrndr_version"
 
