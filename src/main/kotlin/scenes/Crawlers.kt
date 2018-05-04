@@ -269,13 +269,14 @@ vec2 hash22(vec2 p) {
                     mat3 tbnW = mat3(u_modelNormalMatrix);
 
                     x_fill.rgb += max(0.0, v_worldNormal.y);
-                    x_fill.rgb = pow(texture(p_irradiance, normalize(v_worldNormal)).rgb, vec3(2.2))*vec3(0.4, 0.05, 0.02)*20.0;
+                    x_fill.rgb = pow(texture(p_irradiance, normalize(v_worldNormal)).rgb, vec3(2.2))*vec3(0.4, 0.05, 0.02)*(11.0 + 9.0*cos(p_id+p_time*4.0));
                     x_fill.a = 1.0;
                     o_position.xyz = v_viewPosition.xyz;
                     o_position.w = 1.0;
                     o_normal.xyz = v_viewNormal.xyz;
                     o_normal.w = 1.0;
                     o_velocity.xy = (currentClip/currentClip.w - previousClip/previousClip.w).xy*vec2(1280, 720) * p_velocityScale;
+                    o_velocity.z = cos(p_id + p_time*5.0 + va_position.y*3.0) * 0.5 + 0.5;
 
 //                                        x_fill *= max(1.0 + v_viewPosition.z/100.0, 0.0);
 
@@ -286,12 +287,16 @@ vec2 hash22(vec2 p) {
                 parameter("normalMap", normalMap)
                 parameter("time", Math.random())
                 parameter("velocityScale", renderStyle.velocityScale)
+                parameter("time", time)
+                parameter("id", 0.0)
                 output("position", gbuffer.colorBufferIndex("position"))
                 output("normal", gbuffer.colorBufferIndex("normal"))
                 output("velocity", gbuffer.colorBufferIndex("velocity"))
             }
-            walkers.forEach {
+            walkers.forEachIndexed { index, it ->
+
                 it.update(time)
+                drawer.shadeStyle?.parameter("id", index.toFloat())
                 drawNode(drawer, it.root)
             }
         }

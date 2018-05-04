@@ -42,6 +42,7 @@ void main() {
     q.y = floor(q.y*45)/45;
 
     vec2 co = hash22(q*1.0+time)-0.5;
+    vec2 realNoise = hash22(q*1.0+time*0.454);
 
     float addFactor0 = (hash22(q*1.0+time*0.1).x-0.5)*2.0;
     float addFactor1 = (hash22(q*1.0+time*0.1).y-0.5)*2.0;
@@ -53,6 +54,7 @@ void main() {
     vec3 add1 = texture(lap1, v_texCoord0).xyz;
 
     vec2 blurDirection = (   texture(velocity, q).xy)*10.0; //vec2(2.0,cos(v_texCoord0.x*10.0));//texture(tex1, v_texCoord0).xy * 4.0;
+
 
     blurDirection = floor(blurDirection*4.0)/4.0;
 
@@ -73,11 +75,13 @@ void main() {
     vec4 r = texture(real, v_texCoord0);
     float ri = max(0.0, min(1.0, dot(vec3(0.33), r.rgb)));
 
-    vec2 blurDirection2 = (   texture(velocity, v_texCoord0).xy)*10.0; //vec2(2.0,cos(v_texCoord0.x*10.0));//texture(tex1, v_texCoord0).xy * 4.0;
+    vec3 blurDirection2 = (   texture(velocity, v_texCoord0).xyz); //vec2(2.0,cos(v_texCoord0.x*10.0));//texture(tex1, v_texCoord0).xy * 4.0;
 
-    float f = smoothstep(threshold*0.8-0.0001, threshold, ri);
+    float f = 1.0 - (blurDirection2.z*0.9 + 0.1*realNoise.x*blurDirection2.z); // min(1.0, max(0.0, 1.0-threshold)); // smoothstep(0.0, 0.4,  v_texCoord0.y -  threshold);
 
     c.rgb = (1.0-f) * c.rgb + f * r.rgb;
     o_color = c;
+    o_color.rgb -= (add0-add1)*10.0 * (1.0-f);
+     //o_color.rgb += vec3(realNoise.x)*0.1;
 
 }

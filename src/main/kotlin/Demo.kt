@@ -4,6 +4,7 @@ import org.openrndr.*
 import org.openrndr.color.ColorRGBa
 import org.openrndr.draw.*
 import org.openrndr.math.Matrix44
+import org.openrndr.math.smoothstep
 import scenes.*
 import studio.rndr.camera.CameraKeyframer
 import studio.rndr.camera.FirstPersonCamera
@@ -194,7 +195,9 @@ class Demo : Program() {
                 }
 
 
-                val camera = cameras[it.bar.toInt()%2].frame(it.beat)
+                val camera = cameras[it.bar.toInt()%2].frame(it.beat).let { f->
+                    f.copy(exposure = f.exposure * rampInOut(0.1, 4.0,0.5, it.beat%4.0))
+                }
                 drawPost(FirstPersonCamera().fromFrame(camera)) {
                     drawer.fill = ColorRGBa.WHITE.shade(0.01)
                     backBox.draw(drawer)
@@ -214,19 +217,33 @@ class Demo : Program() {
             val cameras = (1..2).map { CameraKeyframer.fromFile("crawler-carnage-${String.format("%02d", it)}.json") }
 
             scheduler.task(patternDuration*2) {
-                post.lut = post.luts.horrorBlue
+                post.lut = post.luts.cripWinter
 
-                val camera = cameras[it.bar.toInt()%2].frame(it.beat)
+                val renderStyle = RenderStyle()
+                val camera = cameras[it.bar.toInt()%2].frame(it.beat).let { f->
+                    f.copy(exposure = f.exposure * rampInOut(0.1, 4.0,0.5, it.beat%4.0))
+                }
                 drawPost(FirstPersonCamera().fromFrame(camera)) {
 
+                    renderStyle.objectFill = ColorRGBa.WHITE.shade(1.0 - (it.time/it.duration))
 
-                    drawer.fill = ColorRGBa.WHITE.shade(0.05)
+                    drawer.fill = ColorRGBa.WHITE.shade(0.05 * (1.0 - (it.time/it.duration)))
                     backBox.draw(drawer)
                     floor.draw(drawer)
 
+
                     crawlers.draw(drawer, it.beat)
-                    crowd.draw(drawer)
+                    crowd.draw(drawer, renderStyle)
                 }
+
+                if (it.beat < 2.0) {
+                    post.moveThreshold = smoothstep(0.0, 0.5, 1.0 - (it.beat/2.0))
+                    post.applyMove = true
+                } else {
+                    post.applyMove = false
+                }
+
+
                 post.apply(gbuffer, result, it.time)
                 drawer.image(result)
 
@@ -310,13 +327,17 @@ class Demo : Program() {
                     city.draw(drawer, it.beat, renderStyle)
                     megaCrawlers.draw(drawer,it.beat%8.0, renderStyle)
                 }
-                post.applyMove = (it.beat%2.0) < 1.0
+//                post.applyMove = (it.beat%2.0) < 1.0
+//
+//                if (it.beat%2.0 >= 0.5) {
+//                    post.moveThreshold =  1.0 - rampInOut(0.5, 1.0, 0.25, it.beat%2.0)
+//                } else {
+//                    post.moveThreshold = 1.0
+//                }
 
-                if (it.beat%2.0 >= 0.5) {
-                    post.moveThreshold = 2.0-((it.beat-0.5) *2.0)*2.0;
-                } else {
-                    post.moveThreshold = 140.0
-                }
+                post.applyMove = true
+                post.moveThreshold =  rampInOut(-0.5,0.75, 0.5,it.beat%2.0)
+
                 post.apply(gbuffer, result, it.time)
                 drawer.image(result)
             }

@@ -2,7 +2,7 @@
 
 out vec4 o_output;
 in vec2 v_texCoord0;
-uniform sampler2d tex0;
+uniform sampler2D tex0;
 
 // -- based on https://github.com/excess-demogroup/even-laster-engine/blob/a451a89f6bd6d3c6017d5890b92d9f72823bc742/src/shaders/bloom.fra
 

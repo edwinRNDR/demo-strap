@@ -13,9 +13,15 @@ uniform float gain;
 in vec2 v_texCoord0;
 out vec4 o_output;
 
+uniform sampler2D tex0;
+uniform sampler2D tex1;
+uniform sampler2D tex2;
+uniform sampler2D tex3;
+uniform sampler2D tex4;
+uniform sampler2D tex5;
+
 vec4 sampleBloom(vec2 pos, float shape) {
-	vec3 sum = vec4(0);
-	int levels = textureQueryLevels(bloomSampler);
+	vec4 sum = vec4(0);
 	float total = 0;
 
 	{
@@ -48,7 +54,23 @@ vec4 sampleBloom(vec2 pos, float shape) {
         vec2 rnd = vec2(nrand(3 + 0.0 + pos.xy + seed),
     		                nrand(5 + 0.0 + pos.yx - seed));
         rnd = (rnd * 3 - 1) / textureSize(tex3, 0);
-        sum += textureLod(tex2, pos + rnd * 0.25, 0.0) * weight;
+        sum += textureLod(tex3, pos + rnd * 0.25, 0.0) * weight;
+        total += weight;
+    }
+    {
+        float weight = pow(4.0, shape);
+        vec2 rnd = vec2(nrand(3 + 0.0 + pos.xy + seed),
+    		                nrand(5 + 0.0 + pos.yx - seed));
+        rnd = (rnd * 3 - 1) / textureSize(tex3, 0);
+        sum += textureLod(tex4, pos + rnd * 0.25, 0.0) * weight;
+        total += weight;
+    }
+    {
+        float weight = pow(5.0, shape);
+        vec2 rnd = vec2(nrand(3 + 0.0 + pos.xy + seed),
+    		                nrand(5 + 0.0 + pos.yx - seed));
+        rnd = (rnd * 3 - 1) / textureSize(tex3, 0);
+        sum += textureLod(tex5, pos + rnd * 0.25, 0.0) * weight;
         total += weight;
     }
 

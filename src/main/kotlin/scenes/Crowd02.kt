@@ -12,7 +12,7 @@ import java.net.URL
 class Crowd02 {
 
     val persons = mutableListOf<VertexBuffer>()
-    val irradiance = Cubemap.fromUrl("file:data/textures/garage_iem.dds")
+    val irradiance = Cubemap.fromUrl("file:data/textures/evening_irr_hdr32.dds")
 
     var previousModelView = Matrix44.IDENTITY
 
@@ -50,8 +50,8 @@ class Crowd02 {
     var positions = (0..1000).map { Vector3.ZERO}.toMutableList()
     var directions = (0..1000).map { Vector3.ZERO}.toMutableList()
     var lastUpdate = (0..1000).map { 0L }.toMutableList()
-    var durations = (0..1000).map { Math.random()*200+200 }.toMutableList()
-    fun draw(drawer: Drawer) {
+    var durations = (0..1000).map { Math.random()*500+500 }.toMutableList()
+    fun draw(drawer: Drawer, renderStyle: RenderStyle = RenderStyle()) {
         val gbuffer = RenderTarget.active
 
         drawer.isolated {
@@ -78,9 +78,17 @@ class Crowd02 {
 
 
                 fragmentTransform = """
-                    x_fill.rgb = pow(texture(p_irradiance, normalize(v_worldNormal)).rgb, vec3(2.2))*0.5;
+                    x_fill.rgb *= pow(texture(p_irradiance, normalize(v_worldNormal)).rgb, vec3(1.0));
 
-                    //x_fill.rgb = vec3(0.1, 0.0, 0.0) + vec3( max(0.0, v_worldNormal.y));
+                    o_normal.xyz = v_viewNormal;
+                    o_normal.w = 1.0;
+                    o_position.xyz = v_viewPosition;
+                    o_position.w = 1.0;
+
+                    vec3 viewDirection = normalize(inverse(mat3(u_viewNormalMatrix)) * v_viewPosition);
+                    vec3 s = reflect(v_worldNormal, viewDirection) * max(0.0, dot(normalize(v_viewNormal), normalize(viewDirection)));
+                    x_fill.rgb += texture(p_irradiance, normalize(s)).rgb * max(0.0, s.y);
+
                     o_normal.xyz = v_viewNormal;
                     o_normal.w = 1.0;
                     o_position.xyz = v_viewPosition;
@@ -96,7 +104,7 @@ class Crowd02 {
                 parameter("previousModelView", previousModelView)
 
             }
-            fill = ColorRGBa.RED
+            fill = renderStyle.objectFill
 
             for (i in 0 until lastUpdate.size) {
 
@@ -118,7 +126,7 @@ class Crowd02 {
                 drawer.isolated {
                     drawer.translate(positions[index])
                     drawer.shadeStyle?.parameter("previousModelView", drawer.view * drawer.model * transform {
-                        translate(directions[index])
+                        //translate(directions[index])
                         index++
                     })
 
