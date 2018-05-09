@@ -35,7 +35,7 @@ class Sketch001 : Program() {
         drawer.fill = ColorRGBa.BLACK
         drawer.fill = ColorRGBa.WHITE
         floor.draw(drawer)
-        crowd.draw(drawer)
+        //crowd.draw(drawer)
     }
 }
 

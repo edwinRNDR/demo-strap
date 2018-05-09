@@ -186,16 +186,12 @@ class PostProcessor(val width: Int, val height: Int) {
 
         flareGhost.apply(flareInput, flareFeatures)
 
-
-
         bloomDownscale.apply(emissive, bloom1); blur1.apply(bloom1, bloom1); blur1.apply(bloom1, bloom1)
         bloomDownscale.apply(bloom1, bloom2); blur2.apply(bloom2, bloom2); blur2.apply(bloom2, bloom2)
         bloomDownscale.apply(bloom2, bloom3); blur3.apply(bloom3, bloom3); blur3.apply(bloom3, bloom3)
         bloomDownscale.apply(bloom3, bloom4); blur4.apply(bloom4, bloom4); blur4.apply(bloom4, bloom4)
         bloomDownscale.apply(bloom4, bloom5); blur5.apply(bloom5, bloom5); blur5.apply(bloom5, bloom5)
         bloomDownscale.apply(bloom5, bloom6); blur6.apply(bloom6, bloom6); blur6.apply(bloom6, bloom6)
-
-
 
         bloom1.filter(MinifyingFilter.LINEAR, MagnifyingFilter.LINEAR)
         bloom2.filter(MinifyingFilter.LINEAR, MagnifyingFilter.LINEAR)
@@ -204,17 +200,8 @@ class PostProcessor(val width: Int, val height: Int) {
         bloom5.filter(MinifyingFilter.LINEAR, MagnifyingFilter.LINEAR)
         bloom6.filter(MinifyingFilter.LINEAR, MagnifyingFilter.LINEAR)
 
-
         bloomUpscale.shape = 0.25
         bloomUpscale.apply(arrayOf(bloom1, bloom2, bloom3, bloom4, bloom5, bloom6), emissive3)
-
-//        hashBlur.apply(emissive, emissive3)
-//        emissiveBlur.apply(emissive, emissive)
-//        emissiveBlur2.gain = 0.5
-//        emissiveBlur2.apply(emissive, emissive2)
-
-
-        //add.apply(arrayOf(emissive2, emissive3), emissive3)
 
         bloomCombine.gain = 0.2
         bloomCombine.apply( arrayOf(dof, emissive3), dof)
@@ -230,14 +217,13 @@ class PostProcessor(val width: Int, val height: Int) {
             passthrough.apply(dof, result2)
         }
         colorLookup.apply(result2, result2)
-        fxaa.maxSpan = 8.0
-        fxaa.directionReduceMinimum = 0.0
-        fxaa.directionReduceMultiplier = 0.0
-        fxaa.lumaThreshold = 0.0
+        fxaa.maxSpan = 16.0
+        fxaa.directionReduceMinimum = 0.5
+        fxaa.directionReduceMultiplier = 0.5
+        fxaa.lumaThreshold = 0.5
 
         fxaa.apply(result2, result)
-        applyMove = true
-        if (!applyMove) {
+         if (!applyMove) {
             passthrough.apply(result, moveBuffers[frame % 2])
         }
         if (applyMove) {

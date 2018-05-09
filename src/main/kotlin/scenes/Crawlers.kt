@@ -32,13 +32,23 @@ class MegaCrawlers : CrawlersBase() {
             }
         }
     }
+    override fun drawShadow(drawer: Drawer, time: Double) {
 
-    override fun draw(drawer: Drawer, time: Double, renderStyle: RenderStyle) {
         drawer.isolated {
             drawer.model *= transform {
                 scale(40.0)
             }
-            super.draw(drawer, time, renderStyle)
+            super.drawShadow(drawer, time)
+
+        }
+    }
+
+    override fun draw(drawer: Drawer, time: Double, renderStyle: RenderStyle, update:Boolean) {
+        drawer.isolated {
+            drawer.model *= transform {
+                scale(40.0)
+            }
+            super.draw(drawer, time, renderStyle, update)
         }
     }
 }
@@ -64,12 +74,23 @@ class MegaMarchingCrawlers : CrawlersBase() {
 
     }
 
-    override fun draw(drawer: Drawer, time: Double, renderStyle: RenderStyle) {
+    override fun drawShadow(drawer: Drawer, time: Double) {
+
         drawer.isolated {
             drawer.model *= transform {
                 scale(40.0)
             }
-            super.draw(drawer, time, renderStyle)
+            super.drawShadow(drawer, time)
+
+        }
+    }
+
+    override fun draw(drawer: Drawer, time: Double, renderStyle: RenderStyle, update: Boolean) {
+        drawer.isolated {
+            drawer.model *= transform {
+                scale(40.0)
+            }
+            super.draw(drawer, time, renderStyle, update)
         }
     }
 }
@@ -225,7 +246,28 @@ open class CrawlersBase(width: Double = 50.0, depth: Double = 50.0) {
 
     }
 
-    open fun draw(drawer: Drawer, time: Double, renderStyle: RenderStyle = RenderStyle()) {
+    open fun drawShadow(drawer:Drawer, time:Double) {
+        drawer.isolated {
+            drawer.depthWrite = true
+            drawer.depthTestPass = DepthTestPass.LESS_OR_EQUAL
+            drawer.shadeStyle = shadeStyle {
+                fragmentTransform = """
+                x_fill.rgb = vec3(v_viewPosition);
+                x_fill.r = 1.0;
+                x_fill.g = 1.0;
+                x_fill.a = 1.0;
+            """
+            }
+            walkers.forEachIndexed { index, it ->
+                it.update(time)
+                drawer.shadeStyle?.parameter("id", index.toFloat())
+                drawNode(drawer, it.root)
+            }
+
+        }
+    }
+
+    open fun draw(drawer: Drawer, time: Double, renderStyle: RenderStyle = RenderStyle(), update:Boolean = true) {
 
         val gbuffer = RenderTarget.active
 
@@ -246,12 +288,11 @@ open class CrawlersBase(width: Double = 50.0, depth: Double = 50.0) {
                     in vec4 currentClip;
 
                     #define HASHSCALE 443.8975
-vec2 hash22(vec2 p) {
-	vec3 p3 = fract(vec3(p.xyx) * HASHSCALE);
-    p3 += dot(p3, p3.yzx+19.19);
-    return fract(vec2((p3.x + p3.y)*p3.z, (p3.x+p3.z)*p3.y));
-}
-
+                    vec2 hash22(vec2 p) {
+	                    vec3 p3 = fract(vec3(p.xyx) * HASHSCALE);
+                        p3 += dot(p3, p3.yzx+19.19);
+                        return fract(vec2((p3.x + p3.y)*p3.z, (p3.x+p3.z)*p3.y));
+                    }
                 """
 
                 vertexTransform = """
@@ -269,14 +310,14 @@ vec2 hash22(vec2 p) {
                     mat3 tbnW = mat3(u_modelNormalMatrix);
 
                     x_fill.rgb += max(0.0, v_worldNormal.y);
-                    x_fill.rgb = pow(texture(p_irradiance, normalize(v_worldNormal)).rgb, vec3(2.2))*vec3(0.4, 0.05, 0.02)*(11.0 + 9.0*cos(p_id+p_time*4.0));
+                    x_fill.rgb = pow(texture(p_irradiance, normalize(v_worldNormal)).rgb, vec3(2.2))*vec3(0.4, 0.05, 0.02) * 20.0; //*(11.0 + 9.0*cos(p_id+p_time*4.0));
                     x_fill.a = 1.0;
                     o_position.xyz = v_viewPosition.xyz;
                     o_position.w = 1.0;
                     o_normal.xyz = v_viewNormal.xyz;
                     o_normal.w = 1.0;
-                    o_velocity.xy = (currentClip/currentClip.w - previousClip/previousClip.w).xy*vec2(1280, 720) * p_velocityScale;
-                    o_velocity.z = cos(p_id + p_time*5.0 + va_position.y*3.0) * 0.5 + 0.5;
+                    o_velocity.xy = (currentClip/currentClip.w - previousClip/previousClip.w).xy*vec2(1280, 720) * 0.08; //p_velocityScale;
+//                    o_velocity.z = 0.cos(p_id + p_time*5.0 + va_position.y*3.0) * 0.5 + 0.5;
 
 //                                        x_fill *= max(1.0 + v_viewPosition.z/100.0, 0.0);
 
@@ -295,7 +336,9 @@ vec2 hash22(vec2 p) {
             }
             walkers.forEachIndexed { index, it ->
 
-                it.update(time)
+                if (update) {
+                    it.update(time)
+                }
                 drawer.shadeStyle?.parameter("id", index.toFloat())
                 drawNode(drawer, it.root)
             }
@@ -309,9 +352,12 @@ private fun drawNode(drawer: Drawer, node: SceneNode) {
     drawer.model *= node.joint.matrix
 
     node.vertexBuffer?.let {
+        if (drawer.shadeStyle?.outputs?.size?:0 > 0)
+
         drawer.shadeStyle?.parameter("previousModelView", node.previousModelView)
 
         drawer.vertexBuffer(it, DrawPrimitive.TRIANGLES)
+        if (drawer.shadeStyle?.outputs?.size?:0 > 0)
         node.previousModelView = drawer.view * drawer.model
     }
     for (child in node.children) {

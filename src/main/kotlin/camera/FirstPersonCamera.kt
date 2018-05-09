@@ -46,6 +46,10 @@ class FirstPersonCamera {
         val mat = cameraQuat.matrix.transposed
         return mat[1].xyz
     }
+    val right:Vector3 get() {
+        val mat = cameraQuat.matrix.transposed
+        return mat[0].xyz
+    }
 
     fun mouseScrolled(event:Program.Mouse.MouseEvent) {
         val mat = cameraQuat.matrix.transposed

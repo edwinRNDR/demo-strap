@@ -13,6 +13,7 @@ import studio.rndr.io.jsonFromLZMA
 import java.io.File
 import java.util.*
 import org.openrndr.shape.Rectangle
+import rndr.studio.demo.shading.shadowOrthoFunction
 import scenes.RenderStyle
 
 
@@ -99,6 +100,7 @@ class City {
                         p3 += dot(p3, p3.yzx+19.19);
                         return fract(vec2((p3.x + p3.y)*p3.z, (p3.x+p3.z)*p3.y));
                     }
+                    $shadowOrthoFunction
                 """
 
             vertexTransform = """
@@ -138,6 +140,13 @@ class City {
                     //
 
                     vec3 skyColor = vec3(cos(va_objectId)*0.2+0.8) ;
+                    float shadow = 1.0;
+                    ${
+            if (renderStyle.lights.size > 0) """
+                    shadow = shadowOrtho(p_lightMap, v_worldPosition, v_worldNormal, p_lightProj, p_lightView);
+                    skyColor.rgb *= (0.5 + 0.5 * shadow); """ else ""
+            }
+
                     x_fill.rgb = pow(texture(p_irradiance, normalize(v_worldNormal)).rgb, vec3(1.0)) * skyColor * 0.2 * (mix(0.0, 0.2, brick)) * (min(v_worldPosition.y/10.0, 1.0)) * (1.0-smoothstep(0.9,1.0, mod(v_worldPosition.y*1.0,1.0)))  + e * vec3(0.4+cos(va_objectId*0.432)*0.05, 0.3+cos(va_objectId*0.123)*0.05, 0.2)*(3.0 + 1.0 * cos(n2.y+va_objectId));
                     o_velocity.xy = (currentClip/currentClip.w - previousClip/previousClip.w).xy*vec2(1280, 720) * 0.08;
 
@@ -147,6 +156,7 @@ class City {
                     float haze = min(1.0, -v_viewPosition.z/400.0);
                     vec3 viewDirection = normalize(inverse(mat3(u_viewNormalMatrix)) * v_viewPosition);
                     vec3 hazeColor = texture(p_irradiance, viewDirection).rgb * p_skyIntensity;
+
                     x_fill.rgb = mix(max(vec3(0.0), x_fill.rgb), hazeColor, haze);
 
 //                    if (cos(v_worldPosition.x * 1 + p_time + va_objectId) > 0.0  && v_worldPosition.y > 30.0)  {
@@ -167,6 +177,11 @@ class City {
             parameter("skyIntensity", renderStyle.skyIntensity)
             parameter("lightDensity", renderStyle.lightDensity)
             parameter("time", time)
+            if (renderStyle.lights.size > 0) {
+                parameter("lightMap", renderStyle.lights[0].map)
+                parameter("lightProj", renderStyle.lights[0].projection)
+                parameter("lightView", renderStyle.lights[0].view)
+            }
         }
 
 

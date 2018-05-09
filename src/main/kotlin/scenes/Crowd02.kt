@@ -47,10 +47,54 @@ class Crowd02 {
         }
     }
 
-    var positions = (0..1000).map { Vector3.ZERO}.toMutableList()
-    var directions = (0..1000).map { Vector3.ZERO}.toMutableList()
+    var positions = (0..1000).map { Vector3.ZERO }.toMutableList()
+    var directions = (0..1000).map { Vector3.ZERO }.toMutableList()
     var lastUpdate = (0..1000).map { 0L }.toMutableList()
-    var durations = (0..1000).map { Math.random()*500+500 }.toMutableList()
+    var durations = (0..1000).map { Math.random() * 500 + 500 }.toMutableList()
+
+    fun update() {
+
+        for (i in 0 until lastUpdate.size) {
+
+            if (System.currentTimeMillis() - lastUpdate[i] > durations[i]) {
+                positions[i] =
+                        Vector3((Math.random() - 0.5) * 40.0, 0.0, (Math.random() - 0.5) * 40.0)
+
+                directions[i] =
+                        Vector3((Math.random() - 0.5) * 0.1, 0.0, (Math.random() - 0.5) * 0.1)
+
+                lastUpdate[i] = System.currentTimeMillis()
+            }
+        }
+
+
+    }
+
+    fun drawShadow(drawer: Drawer, renderStyle: RenderStyle = RenderStyle()) {
+
+        drawer.isolated {
+            drawer.shadeStyle = shadeStyle {
+                fragmentTransform = """
+                    x_fill.rgb = v_viewPosition;
+                    x_fill.r = 1.0;
+                    """
+            }
+            var index = 0
+            for (person in persons) {
+                val m = (System.currentTimeMillis() - lastUpdate[index]) / 200.0
+                drawer.isolated {
+                    drawer.translate(positions[index])
+                    drawer.shadeStyle?.parameter("previousModelView", drawer.view * drawer.model * transform {
+                        //translate(directions[index])
+                        index++
+                    })
+
+                    vertexBuffer(person, DrawPrimitive.TRIANGLES, 0, (person.vertexCount * m).toInt())
+                }
+            }
+        }
+    }
+
     fun draw(drawer: Drawer, renderStyle: RenderStyle = RenderStyle()) {
         val gbuffer = RenderTarget.active
 
@@ -106,23 +150,9 @@ class Crowd02 {
             }
             fill = renderStyle.objectFill
 
-            for (i in 0 until lastUpdate.size) {
-
-                if (System.currentTimeMillis() - lastUpdate[i] > durations[i]) {
-                    positions[i] =
-                        Vector3((Math.random() - 0.5) * 40.0, 0.0, (Math.random() - 0.5) * 40.0)
-
-                    directions[i] =
-                        Vector3((Math.random() - 0.5) * 0.1, 0.0, (Math.random() - 0.5) * 0.1)
-
-                    lastUpdate[i] = System.currentTimeMillis()
-                }
-            }
-
-
             var index = 0
             for (person in persons) {
-                val m = (System.currentTimeMillis()-lastUpdate[index])/200.0
+                val m = (System.currentTimeMillis() - lastUpdate[index]) / 200.0
                 drawer.isolated {
                     drawer.translate(positions[index])
                     drawer.shadeStyle?.parameter("previousModelView", drawer.view * drawer.model * transform {
@@ -130,7 +160,7 @@ class Crowd02 {
                         index++
                     })
 
-                    vertexBuffer(person, DrawPrimitive.TRIANGLES, 0, (person.vertexCount*m).toInt())
+                    vertexBuffer(person, DrawPrimitive.TRIANGLES, 0, (person.vertexCount * m).toInt())
                 }
             }
 

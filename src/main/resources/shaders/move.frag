@@ -75,9 +75,9 @@ void main() {
     vec4 r = texture(real, v_texCoord0);
     float ri = max(0.0, min(1.0, dot(vec3(0.33), r.rgb)));
 
-    vec3 blurDirection2 = (   texture(velocity, v_texCoord0).xyz); //vec2(2.0,cos(v_texCoord0.x*10.0));//texture(tex1, v_texCoord0).xy * 4.0;
+    //vec3 blurDirection2 = (   texture(velocity, v_texCoord0).xyz); //vec2(2.0,cos(v_texCoord0.x*10.0));//texture(tex1, v_texCoord0).xy * 4.0;
 
-    float f = 1.0 - (blurDirection2.z*0.9 + 0.1*realNoise.x*blurDirection2.z); // min(1.0, max(0.0, 1.0-threshold)); // smoothstep(0.0, 0.4,  v_texCoord0.y -  threshold);
+    float f =  min(1.0, max(0.0, 1.0-threshold)); // smoothstep(0.0, 0.4,  v_texCoord0.y -  threshold);
 
     c.rgb = (1.0-f) * c.rgb + f * r.rgb;
     o_color = c;

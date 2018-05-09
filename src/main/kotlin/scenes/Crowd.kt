@@ -34,7 +34,24 @@ class Crowd {
         }
     }
 
-    fun draw(drawer: Drawer) {
+    fun drawShadow(drawer: Drawer) {
+
+        drawer.isolated {
+
+            drawer.shadeStyle = shadeStyle {
+                fragmentTransform = """
+                    x_fill.rgb = v_viewPosition;
+                    x_fill.a = 1.0;
+                """
+            }
+            for (person in persons)
+                vertexBuffer(person, DrawPrimitive.TRIANGLES)
+
+        }
+    }
+
+    fun draw(drawer: Drawer, lightMap:ColorBuffer, lightProj:Matrix44, lightView:Matrix44) {
+
         val gbuffer = RenderTarget.active
 
         drawer.isolated {
@@ -51,17 +68,41 @@ class Crowd {
                     in vec4 previousClip;
                     in vec4 currentClip;
                 """
-
                 vertexTransform = """
                     previousView = (p_previousModelView * vec4(x_position,1.0));
                     previousClip = u_projectionMatrix * previousView;
                     currentClip = u_projectionMatrix * u_viewMatrix * u_modelMatrix * vec4(x_position, 1.0);
                 """
-
-
-
                 fragmentTransform = """
                     x_fill.rgb = pow(texture(p_irradiance, normalize(v_worldNormal)).rgb, vec3(2.2))*0.5;
+
+
+                   vec4 lightClip = p_lightProj * p_lightView * vec4(v_worldPosition, 1.0);
+                    vec3 lightPersp = (lightClip.xyz / lightClip.w) * 0.5 + 0.5;
+
+                    vec4 lightRef  = p_lightView * vec4(v_worldPosition, 1.0);
+                    vec4 positionOfLight = inverse(p_lightView)* vec4(0.0,0.0,0.0,1.0);
+
+
+                    vec3 d = normalize(positionOfLight.xyz);// - v_worldPosition);
+                    float dd = max(0.0, dot(d, normalize(v_worldNormal)));
+                    float bias = max(0.5* (1.0 - dd), 0.1);
+
+
+
+
+                    vec2 step = 1.0 / textureSize(p_lightMap, 0 );
+
+                    float sum = 0;
+                    for (int j = -2; j <=2 ;++j) {
+                    for (int i = -2; i <=2; ++i) {
+                        vec3 lightPos = texture(p_lightMap, lightPersp.xy + vec2(i,j)*step).rgb;
+                            if (lightPos.z < 0 && lightPos.z-bias > lightRef.z) {
+                                sum += 1.0;
+                             }
+                        }
+                    }
+                    x_fill.rgb *= vec3( (1.0 - 0.5 * sum/25.0) );
 
                     //x_fill.rgb = vec3(0.1, 0.0, 0.0) + vec3( max(0.0, v_worldNormal.y));
                     o_normal.xyz = v_viewNormal;
@@ -69,12 +110,14 @@ class Crowd {
                     o_position.xyz = v_viewPosition;
                     o_position.w = 0.1;
                     o_velocity.xy = (currentClip/currentClip.w - previousClip/previousClip.w).xy*vec2(1280, 720)*0.08;
-
-
                     """
                 output("position",gbuffer.colorBufferIndex("position"))
                 output("normal", gbuffer.colorBufferIndex("normal"))
                 output("velocity",gbuffer.colorBufferIndex("velocity"))
+                parameter("lightView", lightView)
+                parameter("lightProj", lightProj)
+                parameter("lightMap", lightMap)
+
                 parameter("irradiance", irradiance)
                 parameter("previousModelView", previousModelView)
 
