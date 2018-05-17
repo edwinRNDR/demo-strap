@@ -7,11 +7,8 @@ import org.openrndr.math.Vector3
 import rndr.studio.demo.shading.shadowOrthoFunction
 
 class ShadowFloor(width:Double = 1500.0, depth:Double = 1500.0) {
-
-
     val texture = ColorBuffer.fromUrl("file:data/textures/ground.png")
     val normalMap = ColorBuffer.fromUrl("file:data/textures/ground_normal.png")
-
     var previousModelView = Matrix44.IDENTITY
 
     val floor = vertexBuffer( vertexFormat {
@@ -21,7 +18,6 @@ class ShadowFloor(width:Double = 1500.0, depth:Double = 1500.0) {
     }, 6)
 
     init {
-
         floor.put {
 
             val p00 = Vector3(-width/2.0, 0.0, -depth/2.0)
@@ -42,12 +38,10 @@ class ShadowFloor(width:Double = 1500.0, depth:Double = 1500.0) {
             write(p11); write(n); write(t11);
             write(p01); write(n); write(t01);
             write(p00); write(n); write(t00);
-
         }
     }
 
     fun draw(drawer: Drawer, lightMap:ColorBuffer, lightProj:Matrix44, lightView:Matrix44) {
-
         val gbuffer = RenderTarget.active
 
         drawer.isolated {
@@ -82,7 +76,6 @@ class ShadowFloor(width:Double = 1500.0, depth:Double = 1500.0) {
                     o_normal.w = max(1.0 + v_viewPosition.z/100.0, 0.0);
                     o_velocity.xy = (currentClip/currentClip.w - previousClip/previousClip.w).xy*vec2(1280, 720)*0.08;
                 """
-
                 normalMap.wrapU = WrapMode.REPEAT
                 normalMap.wrapV = WrapMode.REPEAT
                 texture.wrapU = WrapMode.REPEAT
@@ -97,8 +90,6 @@ class ShadowFloor(width:Double = 1500.0, depth:Double = 1500.0) {
                 output("normal", gbuffer.colorBufferIndex("normal"))
                 output("velocity",gbuffer.colorBufferIndex("velocity"))
                 parameter("previousModelView", previousModelView)
-
-
             }
             drawer.vertexBuffer(floor, DrawPrimitive.TRIANGLES)
             previousModelView = drawer.view * drawer.model

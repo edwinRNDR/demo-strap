@@ -2,6 +2,7 @@ package studio.rndr.demo.bass
 
 import jouvieje.bass.Bass
 import jouvieje.bass.BassInit
+import jouvieje.bass.defines.BASS_ATTRIB.BASS_ATTRIB_FREQ
 import jouvieje.bass.defines.BASS_POS
 import jouvieje.bass.defines.BASS_SAMPLE
 
@@ -9,6 +10,10 @@ class Channel(val channel:Int) {
     fun setPosition(seconds:Double) {
         val offset = Bass.BASS_ChannelSeconds2Bytes(channel, seconds)
         Bass.BASS_ChannelSetPosition(channel, offset, BASS_POS.BASS_POS_BYTE)
+    }
+
+    fun setPitch(pitch:Double) {
+        Bass.BASS_ChannelSetAttribute(channel, BASS_ATTRIB_FREQ, pitch.toFloat())
     }
 
     fun getPosition():Double {

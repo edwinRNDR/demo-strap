@@ -1,15 +1,16 @@
 package modeling
 
+import lzma.sdk.lzma.Decoder
+import lzma.streams.LzmaInputStream
 import org.openrndr.math.Matrix44
 import org.openrndr.math.Vector3
+import java.io.BufferedInputStream
 import java.net.URL
 
 class Triangle(val positions: Array<Vector3>, val normals: Array<Vector3>) {
-
     fun transform(t: Matrix44): Triangle {
         return Triangle(positions.map { (t * it.xyz1).div }.toTypedArray(), normals)
     }
-
 }
 
 class Box(val corner: Vector3, val width: Double, val height: Double, val depth: Double)
@@ -37,14 +38,23 @@ fun bounds(triangles: List<Triangle>): Box {
     return Box(Vector3(minX, minY, minZ), maxX - minX, maxY - minY, maxZ - minZ)
 }
 
+fun loadOBJfromLZMA(url: URL): Map<String, List<Triangle>>  {
+    url.openStream().use {
+        val compressedIn = LzmaInputStream(
+                BufferedInputStream(it),
+                Decoder())
 
-fun loadOBJ(url: URL): Map<String, List<Triangle>> {
+        return loadOBJ(compressedIn.reader().readLines().toList())
+    }
+}
+
+fun loadOBJ(lines: List<String> ): Map<String, List<Triangle>> {
     val meshes = mutableMapOf<String, List<Triangle>>()
     val positions = mutableListOf<Vector3>()
     val normals = mutableListOf<Vector3>()
     var activeMesh = mutableListOf<Triangle>()
 
-    url.readText().split("\n").forEach { line ->
+    lines.forEach { line ->
         if (line.isNotEmpty()) {
             val tokens = line.split(Regex("[ |\t]+")).map { it.trim() }.filter { it.isNotEmpty() }
 
@@ -77,7 +87,6 @@ fun loadOBJ(url: URL): Map<String, List<Triangle>> {
                             activeMesh.add(Triangle(ps, ns))
                         } else {
                             TODO("implement non triangular surfaces ${indices.size}")
-
                         }
                     }
                 }

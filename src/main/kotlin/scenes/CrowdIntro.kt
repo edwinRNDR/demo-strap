@@ -2,6 +2,7 @@ package scenes
 
 import modeling.bounds
 import modeling.loadOBJ
+import modeling.loadOBJfromLZMA
 import org.openrndr.color.ColorRGBa
 import org.openrndr.draw.*
 import org.openrndr.math.Matrix44
@@ -17,7 +18,7 @@ class CrowdIntro {
     var previousModelView = Matrix44.IDENTITY
 
     init {
-        val meshes = loadOBJ(URL("file:data/meshes/crowd.obj"))
+        val meshes = loadOBJfromLZMA(URL("file:data/meshes/crowd.obj.lzma"))
         val format = vertexFormat {
             position(3)
             normal(3)
@@ -43,7 +44,7 @@ class CrowdIntro {
         }
     }
 
-    fun drawShadow(drawer:Drawer, time:Double) {
+    fun drawShadow(drawer: Drawer, time: Double) {
         drawer.isolated {
             drawer.cullTestPass = CullTestPass.BACK
             drawer.shadeStyle = shadeStyle {
@@ -57,7 +58,7 @@ class CrowdIntro {
         }
     }
 
-    fun draw(drawer: Drawer, time:Double = 0.0, renderStyle: RenderStyle) {
+    fun draw(drawer: Drawer, time: Double = 0.0, renderStyle: RenderStyle) {
         val gbuffer = RenderTarget.active
 
         drawer.isolated {
@@ -96,18 +97,18 @@ class CrowdIntro {
 
 
                     ${if (renderStyle.lights.size > 0)
-                        """
+                    """
                         float shadow = shadowOrtho(p_lightMap, v_worldPosition, v_worldNormal, p_lightProj, p_lightView);
                         x_fill.rgb *= (0.5 + 0.5 * shadow);
                         """
-                    else ""}
+                else ""}
                     o_velocity.xy = (currentClip/currentClip.w - previousClip/previousClip.w).xy*vec2(1280, 720)*0.08;
                     """
                 output("position", gbuffer.colorBufferIndex("position"))
                 output("normal", gbuffer.colorBufferIndex("normal"))
                 output("velocity", gbuffer.colorBufferIndex("velocity"))
                 parameter("time", time)
-                parameter("cut", Math.cos(time)*1.0+1.0)
+                parameter("cut", Math.cos(time) * 1.0 + 1.0)
                 parameter("irradiance", irradiance)
                 parameter("previousModelView", previousModelView)
                 if (renderStyle.lights.size > 0) {
@@ -115,7 +116,6 @@ class CrowdIntro {
                     parameter("lightProj", renderStyle.lights[0].projection)
                     parameter("lightView", renderStyle.lights[0].view)
                 }
-
             }
 
             var m = Matrix44.IDENTITY
@@ -123,9 +123,7 @@ class CrowdIntro {
                 vertexBuffer(person, DrawPrimitive.TRIANGLES)
                 drawer.translate(10.0, 0.0, 0.0)
             }
-
             previousModelView = drawer.view
         }
     }
-
 }

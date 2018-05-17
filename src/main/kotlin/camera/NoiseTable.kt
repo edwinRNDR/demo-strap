@@ -11,8 +11,6 @@ enum class NoiseType {
 }
 
 class NoiseTable(val length: Int = 1024, type: NoiseType, density: Double = 1.0, magnitude:Double=1.0) {
-
-
     val table = when (type) {
         NoiseType.UNIFORM -> (0 until length).map {
             if (Math.random() < density) {
@@ -37,7 +35,6 @@ class NoiseTable(val length: Int = 1024, type: NoiseType, density: Double = 1.0,
 
             (0 until length).map {  it ->
                 if (Math.random() < density) {
-
                    var next = last * (1.0-magnitude) +
                     Vector3(r.nextGaussian() * 0.5, r.nextGaussian() * 0.5, r.nextGaussian() * 0.5).normalized * r.nextGaussian() * magnitude
                     last = next
@@ -46,13 +43,10 @@ class NoiseTable(val length: Int = 1024, type: NoiseType, density: Double = 1.0,
                     last
                 }
             }
-
-
         }
     }
 
     operator fun get(t: Double): Vector3 {
-
         val ti0 = t.toInt()
         val ti1 = ti0 + 1
 
@@ -64,5 +58,4 @@ class NoiseTable(val length: Int = 1024, type: NoiseType, density: Double = 1.0,
 
         return v0 * (1.0 - s0) + v1 * s0
     }
-
 }

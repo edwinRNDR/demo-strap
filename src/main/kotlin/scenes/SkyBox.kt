@@ -6,19 +6,18 @@ import org.openrndr.math.transforms.normalMatrix
 
 class SkyBox(size:Double = 1400.0) {
 
-    val cube : VertexBuffer
+    val cube : VertexBuffer = vertexBuffer(
+            vertexFormat {
+                position(3)
+                normal(3)
+                attribute("tangent", 3, VertexElementType.FLOAT32)
+                attribute("binormal", 3, VertexElementType.FLOAT32)
+                textureCoordinate(3)
+            }, 6* 3 * 2
+    )
     val cubemap = Cubemap.fromUrl("file:data/textures/evening_irr_hdr32.dds")
 
     init {
-        cube = vertexBuffer(
-                vertexFormat {
-                    position(3)
-                    normal(3)
-                    attribute("tangent", 3, VertexElementType.FLOAT32)
-                    attribute("binormal", 3, VertexElementType.FLOAT32)
-                    textureCoordinate(3)
-                }, 6* 3 * 2
-        )
         cube.put {
             val p000 = Vector3(-1.0, -1.0, -1.0)
             val p001 = Vector3(-1.0, -1.0, 1.0)
@@ -93,20 +92,15 @@ class SkyBox(size:Double = 1400.0) {
             write(p100*s); write(nnz); write(nnx); write(nny); write(p100)
             write(p000*s); write(nnz); write(nnx); write(nny); write(p000)
         }
-
-
     }
 
     fun draw(drawer: Drawer, renderStyle: RenderStyle = RenderStyle()) {
-
         val gbuffer = RenderTarget.active
 
         drawer.isolated {
             drawer.view = normalMatrix(drawer.view)
             drawer.model = normalMatrix(drawer.model)
-
             drawer.shadeStyle = shadeStyle {
-
                 fragmentTransform = """
                     x_fill.rgb =(texture(p_cubemap, va_texCoord0).rgb) * p_skyIntensity;
                     o_position.xyz = v_viewPosition.xyz;
@@ -125,5 +119,4 @@ class SkyBox(size:Double = 1400.0) {
             drawer.vertexBuffer(listOf(cube),  DrawPrimitive.TRIANGLES)
         }
     }
-
 }

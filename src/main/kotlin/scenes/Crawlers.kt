@@ -15,12 +15,28 @@ import java.io.File
 
 class Crawlers : CrawlersBase() {
 
+    val paths: List<ShapeContour>
+
     init {
-        for (i in 0..20) {
-            walkers += Walker().apply {
-                root.vertexBuffer = body
+        val c = loadSVG(File("data/paths/paths-3.svg").readText())
+        paths = c.findShapes().map { it.shape.outline }
+
+        paths.forEach {
+
+            val t = transform {
+
+                translate(Vector2(-50.0, -50.0))
+
             }
+
+            walkers += PathWalker(it.transform(t).sampleEquidistant(80), speed = 10.0).apply {
+                root.vertexBuffer = body
+                x = it.position(0.0).x
+                z = it.position(0.0).y
+            }
+
         }
+
     }
 }
 
@@ -32,6 +48,7 @@ class MegaCrawlers : CrawlersBase() {
             }
         }
     }
+
     override fun drawShadow(drawer: Drawer, time: Double) {
 
         drawer.isolated {
@@ -43,7 +60,7 @@ class MegaCrawlers : CrawlersBase() {
         }
     }
 
-    override fun draw(drawer: Drawer, time: Double, renderStyle: RenderStyle, update:Boolean) {
+    override fun draw(drawer: Drawer, time: Double, renderStyle: RenderStyle, update: Boolean) {
         drawer.isolated {
             drawer.model *= transform {
                 scale(40.0)
@@ -55,7 +72,7 @@ class MegaCrawlers : CrawlersBase() {
 
 class MegaMarchingCrawlers : CrawlersBase() {
     init {
-        val c = loadSVG(File("data/paths/paths-1.svg").readText())
+        val c = loadSVG(File("data/paths/paths-2.svg").readText())
         val paths = c.findShapes().map { it.shape.outline }
 
         val it = paths[0].transform(transform {
@@ -65,7 +82,7 @@ class MegaMarchingCrawlers : CrawlersBase() {
         }).sampleEquidistant(80)
 
 
-        walkers += PathWalker2(it, 0.5).apply {
+        walkers += PathWalker2(it, 0.45).apply {
             root.vertexBuffer = body
             x = it.position(0.0).x
             z = it.position(0.0).y
@@ -109,21 +126,16 @@ class StillWalker() : Walker() {
         direction = Vector3(0.0, 0.0, 1.0)
         smoothDirection = direction
 
-
         if (!hasAnimations()) {
             animate("dummy", 1.0, 250)
             return true
         } else {
             return false
         }
-
     }
-
 }
 
-
 class PathWalker(val path: ShapeContour, val speed: Double = 1.0) : Walker() {
-
     init {
         updatePositionAndDirection(0.0)
     }
@@ -145,21 +157,16 @@ class PathWalker(val path: ShapeContour, val speed: Double = 1.0) : Walker() {
         } else {
             return false
         }
-
     }
-
 }
 
 class PathWalker2(val path: ShapeContour, val speed: Double = 1.0) : Walker() {
-
     init {
         updatePositionAndDirection(0.0)
     }
 
     var lastTime = 0.0
     override fun updatePositionAndDirection(time: Double): Boolean {
-
-
         val t = Math.floor(time / 2)
         val tf = time / 2 - t
 
@@ -175,14 +182,12 @@ class PathWalker2(val path: ShapeContour, val speed: Double = 1.0) : Walker() {
         legOffsetSize = 2.5
         direction = Vector3(dp.x, 0.0, dp.y).normalized
 
-        if (time  < lastTime) {
+        if (time < lastTime) {
             smoothDirection = direction
         }
 
         smoothDirection = (direction * smoothDirection * 0.9999 + direction * 0.0001).normalized
-
         lastTime = time
-
 
         x = p.x
         z = p.y
@@ -193,14 +198,10 @@ class PathWalker2(val path: ShapeContour, val speed: Double = 1.0) : Walker() {
         } else {
             return false
         }
-
     }
-
 }
 
-
 class CrawlersIntro : CrawlersBase() {
-
     val paths: List<ShapeContour>
 
     init {
@@ -208,21 +209,16 @@ class CrawlersIntro : CrawlersBase() {
         paths = c.findShapes().map { it.shape.outline }
 
         paths.forEach {
-
             walkers += PathWalker(it.sampleEquidistant(80)).apply {
                 root.vertexBuffer = body
                 x = it.position(0.0).x
                 z = it.position(0.0).y
             }
-
         }
-
     }
 }
 
 open class CrawlersBase(width: Double = 50.0, depth: Double = 50.0) {
-
-
     val irradiance = Cubemap.fromUrl("file:data/textures/garage_iem.dds")
     val normalMap = ColorBuffer.fromUrl("file:data/textures/ground_normal.png")
 
@@ -235,18 +231,14 @@ open class CrawlersBase(width: Double = 50.0, depth: Double = 50.0) {
         attribute("center", 3, VertexElementType.FLOAT32)
     }
 
-
     init {
         body = vertexBuffer(format, 100)
-
         extrudeContour(Rectangle(Vector2(-2.0, -1.5), 4.0, 1.0).contour, 4.0, 0.0, body.shadow.writer(), true, true, -2.0)
         body.shadow.writer().rewind()
         body.shadow.upload()
-
-
     }
 
-    open fun drawShadow(drawer:Drawer, time:Double) {
+    open fun drawShadow(drawer: Drawer, time: Double) {
         drawer.isolated {
             drawer.depthWrite = true
             drawer.depthTestPass = DepthTestPass.LESS_OR_EQUAL
@@ -263,20 +255,16 @@ open class CrawlersBase(width: Double = 50.0, depth: Double = 50.0) {
                 drawer.shadeStyle?.parameter("id", index.toFloat())
                 drawNode(drawer, it.root)
             }
-
         }
     }
 
-    open fun draw(drawer: Drawer, time: Double, renderStyle: RenderStyle = RenderStyle(), update:Boolean = true) {
-
+    open fun draw(drawer: Drawer, time: Double, renderStyle: RenderStyle = RenderStyle(), update: Boolean = true) {
         val gbuffer = RenderTarget.active
 
         drawer.isolated {
             drawer.depthWrite = true
             drawer.depthTestPass = DepthTestPass.LESS_OR_EQUAL
-
             drawer.shadeStyle = shadeStyle {
-
                 vertexPreamble = """
                     out vec4 previousView;
                     out vec4 previousClip;
@@ -294,7 +282,6 @@ open class CrawlersBase(width: Double = 50.0, depth: Double = 50.0) {
                         return fract(vec2((p3.x + p3.y)*p3.z, (p3.x+p3.z)*p3.y));
                     }
                 """
-
                 vertexTransform = """
                     previousView = (p_previousModelView * vec4(x_position,1.0));
                     previousClip = u_projectionMatrix * previousView;
@@ -302,7 +289,6 @@ open class CrawlersBase(width: Double = 50.0, depth: Double = 50.0) {
                 """
 
                 fragmentTransform = """
-
                     vec2 uv = va_position.xz*0.1;
 //                    vec3 normal = normalize(texture(p_normalMap, uv).xzy - vec3(0.5, 0.5, 0.5));
 
@@ -335,7 +321,6 @@ open class CrawlersBase(width: Double = 50.0, depth: Double = 50.0) {
                 output("velocity", gbuffer.colorBufferIndex("velocity"))
             }
             walkers.forEachIndexed { index, it ->
-
                 if (update) {
                     it.update(time)
                 }
@@ -352,20 +337,19 @@ private fun drawNode(drawer: Drawer, node: SceneNode) {
     drawer.model *= node.joint.matrix
 
     node.vertexBuffer?.let {
-        if (drawer.shadeStyle?.outputs?.size?:0 > 0)
-
-        drawer.shadeStyle?.parameter("previousModelView", node.previousModelView)
-
+        if (drawer.shadeStyle?.outputs?.size ?: 0 > 0) {
+            drawer.shadeStyle?.parameter("previousModelView", node.previousModelView)
+        }
         drawer.vertexBuffer(it, DrawPrimitive.TRIANGLES)
-        if (drawer.shadeStyle?.outputs?.size?:0 > 0)
-        node.previousModelView = drawer.view * drawer.model
+        if (drawer.shadeStyle?.outputs?.size ?: 0 > 0) {
+            node.previousModelView = drawer.view * drawer.model
+        }
     }
     for (child in node.children) {
         drawNode(drawer, child)
     }
     drawer.popModel()
 }
-
 
 class Joint(val minX: Double = -Math.PI / 4, val maxX: Double = Math.PI / 4, val minY: Double = 0.0, val maxY: Double = 1.0, val minZ: Double = -Math.PI / 4, val maxZ: Double = Math.PI / 4) {
     var x: Double = 0.0
@@ -431,7 +415,6 @@ open class Walker : Animatable() {
     var position = Vector3(0.0, 0.0, 0.0)
     val legs = mutableListOf<Leg>()
 
-
     var smoothDirection = Vector3(0.0, 0.0, 1.0)
     var direction = Vector3(Math.random() - 0.5, 0.0, Math.random() - 0.5).normalized
     val leg: VertexBuffer
@@ -446,7 +429,6 @@ open class Walker : Animatable() {
             attribute("center", 3, VertexElementType.FLOAT32)
         }
         leg = vertexBuffer(format, 100)
-
         extrudeContour(Rectangle(Vector2(-0.1, 0.0), 0.2, -1.0).contour, 0.2, 0.0, leg.shadow.writer(), true, true, -0.1)
         leg.shadow.writer().rewind()
         leg.shadow.upload()
@@ -455,7 +437,6 @@ open class Walker : Animatable() {
         addLeg(Vector3(2.0, 0.0, -2.0))
         addLeg(Vector3(-2.0, 0.0, -2.0))
         addLeg(Vector3(-2.0, 0.0, 2.0))
-
         animate("dummy", 1.0, (Math.random() * 2000.0).toLong())
     }
 
@@ -477,13 +458,11 @@ open class Walker : Animatable() {
 
         for (i in 0..2) {
             val n = SceneNode(
-
                     transform {
                         translate(Vector3(0.0, -1.0, 0.0) + if (i == 0) offset else Vector3.ZERO)
                         if (i == 0)
                             rotate(Vector3.UNIT_Z, 45.0 * sign(offset.x))
                     }, joint = Joint(minY = minY, maxY = maxY)
-
             )
             n.vertexBuffer = leg
             current.children.add(n)
@@ -533,7 +512,6 @@ open class Walker : Animatable() {
         }
         smoothDirection = (smoothDirection * 0.95 + direction * 0.05).normalized
         smoothPosition = smoothPosition * 0.95 + Vector3(x, y, z) * 0.05
-
     }
 
     var legStepSize = 2.0
@@ -542,16 +520,11 @@ open class Walker : Animatable() {
     fun update(time: Double) {
         updateAnimation()
 
-
         legs.forEach { it.updateAnimation() }
-
         if (true) {
             val right = direction.cross(Vector3.UNIT_Y)
-
             val duration = 250L
             val speed = 2.0
-
-
             val basis = Matrix44.fromColumnVectors(right.xyz0, Vector3.UNIT_Y.xyz0, smoothDirection.xyz0, Vector4.UNIT_W)
 
             if (updatePositionAndDirection(time)) {
@@ -641,11 +614,9 @@ fun optimize(endPoint: SceneNode, target: Vector3, chain: List<Joint>): Double {
     return currentError
 }
 
-
 fun relax(endPoint: SceneNode) {
     val chain = endPoint.ikChain.map { it.joint }
     val step = DoubleArray(chain.size * 3)
-
     chain.forEachIndexed { index, joint ->
         if (index > 0) {
             step[index * 3] += chain[index - 1].x - joint.x

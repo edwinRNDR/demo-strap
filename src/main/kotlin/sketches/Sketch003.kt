@@ -59,7 +59,7 @@ class Sketch003 : Program() {
             backBox.draw(drawer)
             drawer.fill = ColorRGBa.WHITE.shade(0.2)
             floor.draw(drawer)
-            crowd.draw(drawer)
+            crowd.draw(drawer, seconds)
             drawer.fill = ColorRGBa.PINK.shade(0.2)
             crawlers.draw(drawer, seconds)
         }

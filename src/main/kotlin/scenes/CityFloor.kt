@@ -6,11 +6,8 @@ import org.openrndr.math.Vector2
 import org.openrndr.math.Vector3
 
 class CityFloor(val irradiance: Cubemap, width: Double = 1500.0, depth: Double = 1500.0) {
-
-
     val texture = ColorBuffer.fromUrl("file:data/textures/ground.png")
     val normalMap = ColorBuffer.fromUrl("file:data/textures/ground_normal.png")
-
     var previousModelView = Matrix44.IDENTITY
 
     val floor = vertexBuffer(vertexFormat {
@@ -20,9 +17,7 @@ class CityFloor(val irradiance: Cubemap, width: Double = 1500.0, depth: Double =
     }, 6)
 
     init {
-
         floor.put {
-
             val p00 = Vector3(-width / 2.0, 0.0, -depth / 2.0)
             val p10 = Vector3(width / 2.0, 0.0, -depth / 2.0)
             val p11 = Vector3(width / 2.0, 0.0, depth / 2.0)
@@ -41,12 +36,10 @@ class CityFloor(val irradiance: Cubemap, width: Double = 1500.0, depth: Double =
             write(p11); write(n); write(t11);
             write(p01); write(n); write(t01);
             write(p00); write(n); write(t00);
-
         }
     }
 
     fun draw(drawer: Drawer, renderStyle: RenderStyle = RenderStyle()) {
-
         val gbuffer = RenderTarget.active
 
         drawer.isolated {
@@ -68,7 +61,6 @@ class CityFloor(val irradiance: Cubemap, width: Double = 1500.0, depth: Double =
                     previousClip = u_projectionMatrix * previousView;
                     currentClip = u_projectionMatrix * u_viewMatrix * u_modelMatrix * vec4(x_position, 1.0);
                 """
-
 
                 fragmentTransform = """
                     vec2 uv = va_position.xz*0.1;
@@ -112,12 +104,9 @@ class CityFloor(val irradiance: Cubemap, width: Double = 1500.0, depth: Double =
                 output("normal", gbuffer.colorBufferIndex("normal"))
                 output("velocity", gbuffer.colorBufferIndex("velocity"))
                 parameter("previousModelView", previousModelView)
-
-
             }
             drawer.vertexBuffer(floor, DrawPrimitive.TRIANGLES)
             previousModelView = drawer.view * drawer.model
         }
     }
-
 }

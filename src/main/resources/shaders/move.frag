@@ -81,7 +81,7 @@ void main() {
 
     c.rgb = (1.0-f) * c.rgb + f * r.rgb;
     o_color = c;
-    o_color.rgb -= (add0-add1)*10.0 * (1.0-f);
+    o_color.rgb -= (add0-add1)*2.0 * (1.0-f);
      //o_color.rgb += vec3(realNoise.x)*0.1;
 
 }

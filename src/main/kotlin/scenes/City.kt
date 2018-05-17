@@ -25,7 +25,6 @@ fun loadMapScene(file: File):MapScene {
 }
 
 class MapScene(val buildings : List<List<Vector2>>, val areas:List<List<Vector2>>, val roads: List<List<Vector2>>,    var bounds: Rectangle) {
-
     var buildingContours = listOf<ShapeContour>()
     var roadContours =  listOf<ShapeContour>()
 }
@@ -34,9 +33,7 @@ class MapScene(val buildings : List<List<Vector2>>, val areas:List<List<Vector2>
 class CityStyle(var fill:ColorRGBa, var upIntensity:Double, var patternIntensity:Double, var explode:Double=0.0, val selected:Double=-5.0, val floorFill:ColorRGBa=fill, val floorUpIntensity: Double=upIntensity)
 
 class City {
-
     val irradiance = Cubemap.fromUrl("file:data/textures/evening_irr_hdr32.dds")
-
     var style:CityStyle = CityStyle(ColorRGBa.WHITE.shade(0.25), 1.0, 0.0)
 
     private val floor: VertexBuffer = vertexBuffer(vertexFormat {
@@ -45,8 +42,6 @@ class City {
         attribute("objectId", 1, VertexElementType.FLOAT32)
         attribute("up", 3, VertexElementType.FLOAT32)
     }, 40)
-
-
 
     private val mesh: VertexBuffer = vertexBuffer(vertexFormat {
         position(3)
@@ -60,8 +55,6 @@ class City {
     init {
         val map = loadMapScene(File("data/meshes/map.json.lzma"))
 
-
-
         vertexCount = mesh.put {
             val random = Random(303_808_909)
             map.buildings.mapIndexed { idx, it ->
@@ -70,10 +63,8 @@ class City {
         }
     }
 
-
     var previousViewMatrix = Matrix44.IDENTITY
     fun draw(drawer: Drawer,  time: Double, renderStyle: RenderStyle = RenderStyle()) {
-
         val gbuffer = RenderTarget.active
 
         drawer.pushModel()
@@ -158,11 +149,6 @@ class City {
                     vec3 hazeColor = texture(p_irradiance, viewDirection).rgb * p_skyIntensity;
 
                     x_fill.rgb = mix(max(vec3(0.0), x_fill.rgb), hazeColor, haze);
-
-//                    if (cos(v_worldPosition.x * 1 + p_time + va_objectId) > 0.0  && v_worldPosition.y > 30.0)  {
-//                    discard;
-//                    }
-
                     """
             output("position", gbuffer.colorBufferIndex("position"))
             output("normal", gbuffer.colorBufferIndex("normal"))
@@ -183,19 +169,13 @@ class City {
                 parameter("lightView", renderStyle.lights[0].view)
             }
         }
-
-
-
         drawer.fill = style.fill
         drawer.shadeStyle?.parameter("upIntensity", style.upIntensity)
         drawer.shadeStyle?.parameter("patternIntensity", style.patternIntensity)
-
 
         drawer.vertexBuffer(mesh, DrawPrimitive.TRIANGLES, 0, vertexCount)
         previousViewMatrix = drawer.view * drawer.model
         drawer.popStyle()
         drawer.popModel()
-
-
     }
 }

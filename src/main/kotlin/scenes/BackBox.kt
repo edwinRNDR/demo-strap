@@ -18,24 +18,18 @@ class BackBox(size:Double = 1400.0) {
         attribute("center", 3, VertexElementType.FLOAT32)
     }, 40)
 
-
-
     init {
         cube.put {
             extrudeContour(Rectangle(Vector2(-size/2.0, -size/2.0), size, size).contour, size, 0.0, this, false, true, -size/2.0)
         }
-
     }
 
     fun draw(drawer: Drawer) {
-
         val gbuffer = RenderTarget.active
-
         drawer.isolated {
             drawer.view = normalMatrix(drawer.view)
             drawer.model = normalMatrix(drawer.model)
             drawer.shadeStyle = shadeStyle {
-
                 fragmentTransform = """
                     o_position.xyz = v_viewPosition.xyz;
                     o_position.w = -1.0;
@@ -50,5 +44,4 @@ class BackBox(size:Double = 1400.0) {
             drawer.vertexBuffer(listOf(cube),  DrawPrimitive.TRIANGLES)
         }
     }
-
 }

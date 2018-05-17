@@ -46,6 +46,7 @@ class CameraTool : Program() {
     override fun setup() {
 
         val floor = Floor()
+        val crowdOutro = CrowdOutro()
         val scene = CrowdIntro()
         val crawlersIntro = CrawlersIntro()
         val crawlers = Crawlers()
@@ -64,21 +65,22 @@ class CameraTool : Program() {
 
         drawFunction = fun(time:Double) {
 
-            displayLines.draw(drawer, time)
-            displayLines.rt.colorBuffer(0).generateMipmaps()
-
+//            displayLines.draw(drawer, time)
+//            displayLines.rt.colorBuffer(0).generateMipmaps()
+//
             val renderStyle = RenderStyle()
-            drawer.fill = ColorRGBa.BLACK
-            backBox.draw(drawer)
-            drawer.fill = ColorRGBa.WHITE.shade(0.1)
-            floor.draw(drawer)
-            texturedRectangle.draw(drawer)
+//            drawer.fill = ColorRGBa.BLACK
+//            backBox.draw(drawer)
+//            drawer.fill = ColorRGBa.WHITE.shade(0.1)
+//            floor.draw(drawer)
+//            texturedRectangle.draw(drawer)
+//
 
 
-
-//            renderStyle.skyIntensity = 0.125
-//            drawer.fill = ColorRGBa.WHITE.shade(0.00)
-//            skyBox.draw(drawer, renderStyle)
+            renderStyle.skyIntensity = 0.125
+            drawer.fill = ColorRGBa.WHITE.shade(0.2)
+            skyBox.draw(drawer, renderStyle)
+            crowdOutro.draw(drawer, time, renderStyle)
 //
 //            cityFloor.draw(drawer, renderStyle)
 //            city.draw(drawer, time, renderStyle)

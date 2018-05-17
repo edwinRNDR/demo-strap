@@ -31,10 +31,10 @@ class CubeField(width: Double = 50.0, depth: Double = 50.0) {
             for (y in 0 until 20) {
                 for (x in 0 until 20) {
                     write(transform {
-                        translate(Vector3(x - 10.0, Math.cos(x*1.0+y*1.0)*0.5+0.5, y - 10.0)*10.0)
+                        translate(Vector3(x - 10.0, Math.cos(x * 1.0 + y * 1.0) * 0.5 + 0.5, y - 10.0) * 10.0)
 
                         scale(5.0)
-                        rotate(Vector3.UNIT_Z, Math.random()*360.0)
+                        rotate(Vector3.UNIT_Z, Math.random() * 360.0)
 
                     })
                 }

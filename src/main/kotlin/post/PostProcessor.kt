@@ -1,6 +1,5 @@
 package studio.rndr.post
 
-
 import org.openrndr.color.ColorRGBa
 import org.openrndr.draw.*
 import org.openrndr.filter.antialias.FXAA
@@ -22,7 +21,7 @@ import org.openrndr.math.transforms.translate
 import post.*
 
 class PostProcessor(val width: Int, val height: Int) {
-
+    var freakMode = false
     var enableHDR = false
 
     var projection = Matrix44.IDENTITY
@@ -36,15 +35,17 @@ class PostProcessor(val width: Int, val height: Int) {
         var cripWinter = ColorBuffer.fromUrl("file:data/color-lookup/crisp-winter.png")
         var neutral = ColorBuffer.fromUrl("file:data/color-lookup/neutral.png")
     }
+
     val luts = Luts()
-    val colorLookup = ColorLookup(luts.purple03)
+    val colorLookup = ColorLookup(luts.purple03).apply {
+        noiseGain = 0.01
+    }
 
     var lut: ColorBuffer
-    set(value) {
-        colorLookup.lookup = value
-    }
-    get() = colorLookup.lookup
-
+        set(value) {
+            colorLookup.lookup = value
+        }
+        get() = colorLookup.lookup
 
     private val flareGhost = FlareGhost()
     private val bloomDownscale = BloomDownscale()
@@ -60,17 +61,17 @@ class PostProcessor(val width: Int, val height: Int) {
     val blur6 = ApproximateGaussianBlur()
 
     val bloomCombine = BloomCombine()
-    private val bloom1 = colorBuffer(width/2, height/2, 1.0, ColorFormat.RGBa, ColorType.FLOAT16)
-    private val bloom2 = colorBuffer(width/4, height/4, 1.0, ColorFormat.RGBa, ColorType.FLOAT16)
-    private val bloom3 = colorBuffer(width/8, height/8, 1.0, ColorFormat.RGBa, ColorType.FLOAT16)
-    private val bloom4 = colorBuffer(width/16, height/16, 1.0, ColorFormat.RGBa, ColorType.FLOAT16)
-    private val bloom5 = colorBuffer(width/32, height/32, 1.0, ColorFormat.RGBa, ColorType.FLOAT16)
-    private val bloom6 = colorBuffer(width/64, height/64, 1.0, ColorFormat.RGBa, ColorType.FLOAT16)
+    private val bloom1 = colorBuffer(width / 2, height / 2, 1.0, ColorFormat.RGBa, ColorType.FLOAT16)
+    private val bloom2 = colorBuffer(width / 4, height / 4, 1.0, ColorFormat.RGBa, ColorType.FLOAT16)
+    private val bloom3 = colorBuffer(width / 8, height / 8, 1.0, ColorFormat.RGBa, ColorType.FLOAT16)
+    private val bloom4 = colorBuffer(width / 16, height / 16, 1.0, ColorFormat.RGBa, ColorType.FLOAT16)
+    private val bloom5 = colorBuffer(width / 32, height / 32, 1.0, ColorFormat.RGBa, ColorType.FLOAT16)
+    private val bloom6 = colorBuffer(width / 64, height / 64, 1.0, ColorFormat.RGBa, ColorType.FLOAT16)
 
 
-    private val flareInput = colorBuffer(width/2, height/2,1.0, ColorFormat.RGBa, ColorType.FLOAT16)
-    private val flareFeatures = colorBuffer(width/8, height/8,1.0, ColorFormat.RGBa, ColorType.FLOAT16)
-    private val flareBlurred = colorBuffer(width/8, height/8,1.0, ColorFormat.RGBa, ColorType.FLOAT16)
+    private val flareInput = colorBuffer(width / 2, height / 2, 1.0, ColorFormat.RGBa, ColorType.FLOAT16)
+    private val flareFeatures = colorBuffer(width / 8, height / 8, 1.0, ColorFormat.RGBa, ColorType.FLOAT16)
+    private val flareBlurred = colorBuffer(width / 8, height / 8, 1.0, ColorFormat.RGBa, ColorType.FLOAT16)
 
     private val ssao = Ssao()
     private val sslr = Sslr()
@@ -126,7 +127,7 @@ class PostProcessor(val width: Int, val height: Int) {
     var applyMove = false
     var moveThreshold = 140.0
 
-    val result2 = colorBuffer(width, height,1.0, ColorFormat.RGBa, ColorType.FLOAT16)
+    val result2 = colorBuffer(width, height, 1.0, ColorFormat.RGBa, ColorType.FLOAT16)
     fun createGBuffer(): RenderTarget {
         return renderTarget(width, height) {
             colorBuffer("albedo", ColorFormat.RGBa, ColorType.FLOAT16)
@@ -137,7 +138,7 @@ class PostProcessor(val width: Int, val height: Int) {
         }
     }
 
-    fun apply(gbuffer: RenderTarget, result: ColorBuffer,time:Double = 0.0) {
+    fun apply(gbuffer: RenderTarget, result: ColorBuffer, time: Double = 0.0) {
         hashBlur.time = time
 
         gbuffer.colorBuffer(1).filterMin = MinifyingFilter.NEAREST
@@ -164,16 +165,16 @@ class PostProcessor(val width: Int, val height: Int) {
         add.apply(arrayOf(occlusion2x, reflection), reflection)
 
         positionToCoc.minCoc = 2.0
-        positionToCoc.maxCoc = 20.0 * (gbuffer.width/1280.0)
-        positionToCoc.aperture = aperture * (gbuffer.width/1280.0)
+        positionToCoc.maxCoc = 20.0 * (gbuffer.width / 1280.0)
+        positionToCoc.aperture = aperture * (gbuffer.width / 1280.0)
         positionToCoc.focalPlane = focalPlane
         positionToCoc.focalLength = focalLength
         positionToCoc.exposure = exposure
 
-        hexDof.samples = (20 * (gbuffer.width/1280.0)).toInt()
+        hexDof.samples = (20 * (gbuffer.width / 1280.0)).toInt()
         positionToCoc.apply(arrayOf(reflection, gbuffer.colorBuffer("position")), coc)
 
-        velocityBlur2.iterations = 10 + (width/1280)-1
+        velocityBlur2.iterations = 10 + (width / 1280) - 1
         velocityBlur2.apply(arrayOf(coc, gbuffer.colorBuffer("velocity")), cocBlurred)
         floorCoc.apply(cocBlurred, cocBlurred)
         hexDof.apply(cocBlurred, dof)
@@ -204,7 +205,7 @@ class PostProcessor(val width: Int, val height: Int) {
         bloomUpscale.apply(arrayOf(bloom1, bloom2, bloom3, bloom4, bloom5, bloom6), emissive3)
 
         bloomCombine.gain = 0.2
-        bloomCombine.apply( arrayOf(dof, emissive3), dof)
+        bloomCombine.apply(arrayOf(dof, emissive3), dof)
         //add.apply(arrayOf(emissive3, dof), dof)
         bloomCombine.gain = 1.0
         flareBlur.apply(flareFeatures, flareFeatures)
@@ -221,12 +222,17 @@ class PostProcessor(val width: Int, val height: Int) {
         fxaa.directionReduceMinimum = 0.5
         fxaa.directionReduceMultiplier = 0.5
         fxaa.lumaThreshold = 0.5
-
         fxaa.apply(result2, result)
-         if (!applyMove) {
+
+        var effectiveApply = applyMove || freakMode
+
+        if (!effectiveApply) {
             passthrough.apply(result, moveBuffers[frame % 2])
         }
-        if (applyMove) {
+        if (effectiveApply) {
+            if (freakMode) {
+                move.threshold = 0.5
+            }
             lapBlur.window = 1
             lapBlur.apply(result, lapBlurred0)
             lapBlur.apply(lapBlurred0, lapBlurred1)
@@ -240,9 +246,6 @@ class PostProcessor(val width: Int, val height: Int) {
             //add.apply(arrayOf(lapBlurred, moveBuffers[frame%2]), moveBuffers[frame%2])
             passthrough.apply(moveBuffers[frame % 2], result)
         }
-
         frame++
     }
-
-
 }
