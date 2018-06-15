@@ -3,7 +3,7 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.nativebass</groupId>
-  <artifactId>nativebass-macos</artifactId>
+  <artifactId>nativebass-mac</artifactId>
   <version>1.1.2</version>
   <description>POM was created from install:install-file</description>
 </project>
